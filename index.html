@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Game</title>
+    <style>
+        body {
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow',sans-serif;
+            background-color: peru;
+            text-align: center;
+        }
+
+        #pagina-inicial {
+            max-width: 800px;
+            margin: 250px auto;
+            background-color: burlywood;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        h2 {
+            color: black;
+        }
+
+        #texto-inicial {
+            margin-bottom: 20px;
+            font-size: 23px;
+            color: white;
+        }
+
+        #botao-inicial {
+            padding: 10px 20px;
+            background-color: cadetblue;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        #botao-inicial:hover {
+            background-color: blue;
+        }
+
+        #quiz-container {
+            display: none;
+            max-width: 600px;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0 , 0, 0, 0.1);
+        }
+
+        #perguntas-container {
+            margin-bottom: 20px;
+        }
+
+        #options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            padding: 10px;
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .option:hover {
+            background-color: #ccc;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        #next-btn {
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        #next-btn:hover {
+            background-color: #45a049;
+        }
+
+        .status-gif {
+            display: none;
+            max-width: 100%;
+        }
+
+        #playing-gif {
+            display: none;
+            max-width: 100%;
+        }
+
+        #answer-audio {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="pagina-inicial">
+        <h2>Bem vindo ao jogo mais moderno de 1624</h2>
+        <p id="texto-inicial">faz te Dj da aldeia e adivinha a muisca pelo seu remix medieval</p>
+        <button id="botao-inicial" onclick="startQuiz()">Começar</button>
+    </div>
+
+    <div id="quiz-container">
+        <h2>Quiz Game</h2>
+        <div id="perguntas-container">
+            <audio controls id="question-audio" onplay="onAudioPlay()"></audio>
+        </div>
+        <div id="options"></div>
+        <div id="result"></div>
+        <button id="next-btn" onclick="nextQuestion()">Next</button>
+        <audio id="answer-audio" controls></audio>
+        <img id="correct-gif" class="status-gif" src="https://media.tenor.com/YhRuSLHzeGYAAAAM/knight-dancing.gif" alt="Correct GIF">
+        <img id="wrong-gif" class="status-gif" src="https://media.tenor.com/YhRuSLHzeGYAAAAM/knight-dancing.gif" alt="Wrong GIF">
+        <img id="playing-gif" class="status-gif" src="https://media.tenor.com/YhRuSLHzeGYAAAAM/knight-dancing.gif" alt="Playing GIF">
+    </div>
+
+    <script>
+        const startPage = document.getElementById("pagina-inicial");
+        const quizContainer = document.getElementById("quiz-container");
+
+        function startQuiz() {
+            startPage.style.display = "none";
+            quizContainer.style.display = "block";
+            loadQuestion();
+        }
+
+        const questions = [
+            {
+                audioSrc:"https://github.com/PR-SousaTeixeira/audioMp3/raw/main/Hips%20dont%20lie%20Medieval.mp3", 
+                options: ["Hips dont lie", "Shape of You", "Gangam Style", "Despacito"],
+                correctAnswer: "Hips dont lie",
+                answerAudioSrc:"https://github.com/PR-SousaTeixeira/audioMp3/raw/main/Hips%20dont%20lie%20Original.mp3"
+            },
+            {
+                audioSrc: "question2.mp3",
+                options: ["Option X", "Option Y", "Option Z", "Option W"],
+                correctAnswer: "Option W",
+                answerAudioSrc: "https://github.com/PR-SousaTeixeira/audioMp3/raw/main/Hips%20dont%20lie%20Original.mp3"
+            },
+            // mais perguntas
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        function loadQuestion() {
+            const currentQuestion = questions[currentQuestionIndex];
+            const questionContainer = document.getElementById("perguntas-container");
+            const questionAudio = document.getElementById("question-audio");
+            const optionsContainer = document.getElementById("options");
+            const resultElement = document.getElementById("result");
+            const answerAudio = document.getElementById("answer-audio");
+
+            // reset a pergunta e esconder o gif
+            questionContainer.innerHTML = '<audio controls id="question-audio" onplay="onAudioPlay()"></audio>';
+            document.querySelectorAll('.status-gif').forEach(gif => gif.style.display = 'none');
+
+            // audio source
+            questionAudio.src = currentQuestion.audioSrc;
+            questionAudio.load();
+
+            // operece as opcções, USA JSX
+            optionsContainer.innerHTML = currentQuestion.options.map((option, index) => {
+                return `<div class="option" onclick="checkAnswer('${option}', ${index})">${option}</div>`;
+            }).join('');
+
+        }
+
+        function checkAnswer(selectedAnswer, index) {
+            const currentQuestion = questions[currentQuestionIndex];
+            const resultElement = document.getElementById("result");
+            const nextBtn = document.getElementById("next-btn");
+            const correctGif = document.getElementById("correct-gif");
+            const wrongGif = document.getElementById("wrong-gif");
+            const answerAudio = document.getElementById("answer-audio");
+
+            if (selectedAnswer === currentQuestion.correctAnswer) {
+                resultElement.textContent = "Correto!";
+                resultElement.style.color = "green";
+                score++;
+
+                // GIF correto
+                correctGif.style.display = "block";
+                wrongGif.style.display = "none"; // esconde GIF errado
+            } else {
+                resultElement.textContent = "Errado :( a opção certa era " + currentQuestion.correctAnswer;
+                resultElement.style.color = "red";
+
+                // gif errado
+                wrongGif.style.display = "block";
+                correctGif.style.display = "none"; //esconde gif certo
+            }
+
+            // Audio original mostrar/esconder
+            answerAudio.src = currentQuestion.answerAudioSrc;
+            answerAudio.style.display = "block";
+            answerAudio.load();
+            answerAudio.play();
+            //Perceber melhor esta parte
+            nextBtn.disabled = false;
+            document.querySelectorAll(".option")[index].classList.add("selected");
+            document.querySelectorAll(".option").forEach((option, i) => {
+                option.onclick = null;
+            });
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            const correctGif = document.getElementById("correct-gif");
+            const wrongGif = document.getElementById("wrong-gif");
+            const answerAudio = document.getElementById("answer-audio");
+
+            // esconder elementos até a proxima pergunta
+            correctGif.style.display = "none";
+            wrongGif.style.display = "none";
+            answerAudio.style.display = "none";
+
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showFinalScore();
+            }
+        }
+        //PERCEBER MELHOR, USA JSX
+        function showFinalScore() {
+            const quizContainer = document.getElementById("quiz-container");
+            quizContainer.innerHTML = `<h2>Your Final Score: ${score} out of ${questions.length}</h2>`;
+        }
+       //AUTOPLAY??????
+        function onAudioPlay() {
+            const playingGif = document.getElementById("playing-gif");
+            playingGif.style.display = "block";
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
